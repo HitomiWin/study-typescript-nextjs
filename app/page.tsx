@@ -1,64 +1,83 @@
-type Foo = {
-  a: number;
-  b: string;
-};
-type Bar = {
-  a: string;
-  c: boolean;
-};
-// This is intersection types
-// type FooBar = Foo & Bar;
-// const Test: FooBar ={
-//   a:1,
-//   b:"",
-//   c:true
-// }
-const test: Foo | Bar = {
-  a: 1,
-  b: "",
-  c: true,
-};
+"use client";
+import { ChangeEventHandler, FC, MouseEventHandler, useState } from "react";
 
-if ("b" in test) {
-  test.a.toFixed();
-}
-
-interface A {
-  a: number;
-}
-interface AB extends A {
-  b: string;
-}
-
-type AT = {
-  at: number;
-};
-
-type ABT = AT & {
-  bt: string;
+type Todo = {
+  id: number;
+  label: string;
+  isDone: boolean;
 };
 
 export default function Home() {
-  const foo = "foo" as const;
-  let bar = foo; // assertion
-  function double(x: number): number | undefined {
-    if (x > 0) {
-      return;
-    }
-    return x * 2;
-  }
+  const [text, setText] = useState<string>("");
+  const [todos, setTodos] = useState<Todo[]>([]);
 
-  const nrArr: (number | string)[] = [1, 2, "3"];
-  const tupleArr: [string, number] = ["foo", 1];
-  // let obj1: {} = true; // {} is not object
-  // let obj2: object = []; // object means it's not primitive type
-  let obj3: Record<string, unknown> = {}; // never instead of unknown means empty {}
-  //index signature
-  let obj4: { [key: string]: unknown } = {};
+  const toggle: ChangeEventHandler<HTMLInputElement> = (e) => {
+    setTodos((prevTodo) => {
+      return prevTodo.map((todo) => {
+        if (todo.id === Number(e.target.value)) {
+          return { ...todo, isDone: !todo.isDone };
+        }
+        return todo;
+      });
+    });
+  };
+  const addTodo: MouseEventHandler<HTMLButtonElement> = () => {
+    if (text !== "") {
+      setTodos((prevTodos) => {
+        return [
+          ...prevTodos,
+          {
+            id: Math.random(),
+            label: text,
+            isDone: false,
+          },
+        ];
+      });
+      setText("");
+    }
+
+    return;
+  };
+
+  const ListItem: FC<{
+    todo: Todo;
+    toggle: ChangeEventHandler<HTMLInputElement>;
+  }> = ({ todo, toggle }) => {
+    return (
+      <label className="flex items-center gap-x-2">
+        <input
+          type="checkbox"
+          value={todo.id}
+          checked={todo.isDone}
+          onChange={toggle}
+        />
+        <span>{todo.label}</span>
+      </label>
+    );
+  };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div>test</div>
-    </main>
+    <div className="w-96 mx-auto p-20">
+      <h1 className="text-xl font-bold">To do</h1>
+      <div className="flex gap-x-2">
+        <input
+          value={text}
+          type="text"
+          className="border border-black"
+          onChange={(e) => setText(e.target.value)}
+        />
+        <button
+          className="border border-black shrink-0 px-2"
+          onClick={addTodo}
+          disabled={text === ""}>
+          Add
+        </button>
+      </div>
+      <ul className="mt-4">
+        {todos.map((todo) => (
+          <ListItem todo={todo} toggle={toggle} key={todo.id} />
+        ))}
+      </ul>
+    </div>
   );
 }
